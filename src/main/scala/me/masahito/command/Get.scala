@@ -19,7 +19,7 @@ object Get extends Command {
   def read(socket: IO.SocketHandle, datas: mutable.HashMap[String, String]): IO.Iteratee[Unit] = {
     for {
       _ <- IO.drop(1) // スペースの削除
-      key <- IO takeUntil CRLF map ascii
+      key <- IO.takeUntil(CRLF).map(ascii(_).trim)
     } yield {
       datas.get(key) match {
         case Some(x) => socket.write(ByteString("VALUE %s 0 %d\r\n%s\r\nEND\r\n".format(key, x.length, x)))

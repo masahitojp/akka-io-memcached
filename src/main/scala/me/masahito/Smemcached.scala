@@ -17,7 +17,6 @@ class Smemcached(port: Int, addressPromise: Promise[SocketAddress]) extends Acto
   var hServer: IO.ServerHandle = null
 
   override def preStart() {
-    datas += ("test" -> "test")
     hServer = IOManager(context.system).listen( new InetSocketAddress(port) )
   }
   override def postStop(){
@@ -32,7 +31,7 @@ class Smemcached(port: Int, addressPromise: Promise[SocketAddress]) extends Acto
     case NewClient(server) => {
       log.info("new client")
       val socket = server.accept()
-      state(socket) flatMap (_ => this.processCommandKai(socket))
+      state(socket) flatMap (_ => this.processCommand(socket))
     }
     case Read(socket, bytes) => {
       state(socket)(Chunk(bytes))
@@ -45,7 +44,7 @@ class Smemcached(port: Int, addressPromise: Promise[SocketAddress]) extends Acto
   }
 
 
-  def processCommandKai(socket: IO.SocketHandle): IO.Iteratee[Unit]  = {
+  def processCommand(socket: IO.SocketHandle): IO.Iteratee[Unit]  = {
     IO.repeat {
       IO.take(3).flatMap {
         case Get.commandHeadOfThree => Get.read(socket, datas)
